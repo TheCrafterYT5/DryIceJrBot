@@ -106,7 +106,12 @@ module.exports = {
                         }
                     }
                     // if ((aki.progress >= 90 && !guessResetNum) || forceGuess) {
-                    if (aki.guess != undefined && !guessResetNum || forceGuess) {
+                    if (forceGuess) {
+                        await message.reply("No puedo pensar en nadie <:o_o:833192029253009428>");
+                        win = true;
+                        break;
+                    }
+                    if (aki.guess != undefined && !guessResetNum) {
                         timeGuesses++;
                         guessResetNum += 10;
                         // await aki.win();
