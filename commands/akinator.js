@@ -4,9 +4,9 @@ module.exports = {
     aliases: ['aki'],
     description: "Juega a Akinator",
     async execute(message, args, cmd, client, Discord) {
-        const { Aki } = require("aki-api");
+        const { Aki, regions } = require("aki-api");
         const { list, verify } = require("../functions");
-        const regions = ["normal", "animales"];
+        // const regions = ["normal", "animales"];
 
         if (message.channel.type === 'dm') {
             message.reply('Este comando se lo usa en el Servidor: https://discord.gg/EqQQ2xH');
@@ -16,23 +16,24 @@ module.exports = {
         if (message.channel.id === '729112106930143272' || message.channel.id === '830636260367794176' || message.channel.id === '717908264809005138') {
 
             if (!message.channel.permissionsFor(client.user).has("EMBED_LINKS")) return message.channel.send("No tengo el permiso de `EMBED_LINKS`");
-            if (!args[0]) return message.reply('Debes escribir que categoria quieres jugar Ej: `-aki normal` o `-aki animales`').then((sent) => {
-                setTimeout(function () {
-                    sent.delete();
-                    message.delete();
-                }, 7000);
-            });
+            // if (!args[0]) return message.reply('Debes escribir que categoria quieres jugar Ej: `-aki normal` o `-aki animales`').then((sent) => {
+            //     setTimeout(function () {
+            //         sent.delete();
+            //         message.delete();
+            //     }, 7000);
+            // });
+            // console.log(regions);
 
-            let stringAki = args[0].toLowerCase();
-            let region;
-            if (stringAki === "normal".toLocaleLowerCase()) region = "es";
-            if (stringAki === "animales".toLocaleLowerCase()) region = "es_animals";
-            if (!regions.includes(stringAki)) return message.reply("Esa no es una categoría válida :neutral_face:").then((sent) => {
-                setTimeout(function () {
-                    sent.delete();
-                    message.delete();
-                }, 7000);
-            });
+            // let stringAki = args[0].toLowerCase();
+            let region = 'es';
+            // if (stringAki === "normal".toLocaleLowerCase()) region = "es";
+            // if (stringAki === "animales".toLocaleLowerCase()) region = "es_animals";
+            // if (!regions.includes(stringAki)) return message.reply("Esa no es una categoría válida :neutral_face:").then((sent) => {
+            //     setTimeout(function () {
+            //         sent.delete();
+            //         message.delete();
+            //     }, 7000);
+            // });
             message.channel.send("Espera <a:gato_truco:833834155522392154>...").then((sent) => {
                 setTimeout(function () {
                     sent.delete();
@@ -40,7 +41,7 @@ module.exports = {
             });
 
             try {
-                const aki = new Aki(region);
+                const aki = new Aki({ region });
                 let ans = null;
                 let win = false;
                 let timeGuesses = 0;
@@ -66,59 +67,63 @@ module.exports = {
                     const answers = aki.answers.map((answer) => answer.toLowerCase());
                     answers.push("end");
                     if (aki.currentStep > 0) answers.push("back");
-                    const embed = new Discord.MessageEmbed()
-                        .setAuthor(`Pregunta #${aki.currentStep + 1}`, client.user.avatarURL())
-                        .setDescription([
-                            `<@${message.author.id}> **${aki.question}**`,
-                            `Respuestas:`,
-                            `**${aki.answers.join(" | ")}${aki.currentStep > 0 ? ` | Back` : ""} | End **`
-                        ])
-                        .setColor('#0ebcfb')
-                    await message.channel.send(embed).then((sent) => {
-                        setTimeout(function () {
-                            sent.delete();
-                        }, 30000);
-                    });
-                    const filter = (res) => res.author.id === message.author.id && answers.includes(res.content.toLowerCase())
-                    const messages = await message.channel.awaitMessages(filter, {
-                        max: 1,
-                        time: 30000
-                    });
-                    if (!messages.size) {
-                        const timeOutEmbed = new Discord.MessageEmbed()
-                            .setDescription(`<:efe:833192065323892736> Se ha acabado el tiempo de espera <@${message.author.id}>`)
+                    if (aki.guess == undefined) {
+                        const embed = new Discord.MessageEmbed()
+                            .setAuthor(`Pregunta #${aki.currentStep + 1}`, client.user.avatarURL())
+                            .setDescription([
+                                `<@${message.author.id}> **${aki.question}**`,
+                                `Respuestas:`,
+                                `**${aki.answers.join(" | ")}${aki.currentStep > 0 ? ` | Back` : ""} | End **`
+                            ])
                             .setColor('#0ebcfb')
-                        await message.channel.send(timeOutEmbed);
-                        win = true;
-                        break;
-                    }
-                    const choice = messages.first().content.toLowerCase();
-                    if (choice.toLowerCase() === "end".toLocaleLowerCase()) {
-                        forceGuess = true;
-                    } else if (choice.toLowerCase() === "back".toLocaleLowerCase()) {
-                        wentBack = true;
-                        await aki.back();
-                        continue;
-                    } else {
-                        ans = answers.indexOf(choice);
-                    }
-                    if ((aki.progress >= 90 && !guessResetNum) || forceGuess) {
-                        timeGuesses++;
-                        guessResetNum += 10;
-                        await aki.win();
-                        const guess = aki.answers.filter((g) => !guessBlackList.includes(g.id))[0];
-                        if (!guess) {
-                            await message.reply("No puedo pensar en nadie <:o_o:833192029253009428>");
+                        await message.channel.send(embed).then((sent) => {
+                            setTimeout(function () {
+                                sent.delete();
+                            }, 30000);
+                        });
+                        const filter = (res) => res.author.id === message.author.id && answers.includes(res.content.toLowerCase())
+                        const messages = await message.channel.awaitMessages(filter, {
+                            max: 1,
+                            time: 30000
+                        });
+                        if (!messages.size) {
+                            const timeOutEmbed = new Discord.MessageEmbed()
+                                .setDescription(`<:efe:833192065323892736> Se ha acabado el tiempo de espera <@${message.author.id}>`)
+                                .setColor('#0ebcfb')
+                            await message.channel.send(timeOutEmbed);
                             win = true;
                             break;
                         }
-                        guessBlackList.push(guess.id);
+                        const choice = messages.first().content.toLowerCase();
+                        if (choice.toLowerCase() === "end".toLocaleLowerCase()) {
+                            forceGuess = true;
+                        } else if (choice.toLowerCase() === "back".toLocaleLowerCase()) {
+                            wentBack = true;
+                            await aki.back();
+                            continue;
+                        } else {
+                            ans = answers.indexOf(choice);
+                        }
+                    }
+                    // if ((aki.progress >= 90 && !guessResetNum) || forceGuess) {
+                    if (aki.guess != undefined && !guessResetNum || forceGuess) {
+                        timeGuesses++;
+                        guessResetNum += 10;
+                        // await aki.win();
+                        // const guess = aki.answers.filter((g) => !guessBlackList.includes(g.id))[0];
+                        // if (!guess.name) {
+                        //     await message.reply("No puedo pensar en nadie <:o_o:833192029253009428>");
+                        //     win = true;
+                        //     break;
+                        // }
+                        guessBlackList.push(aki.guess.id_proposition);
                         const embed = new Discord.MessageEmbed()
                             .setColor('#0ebcfb')
-                            .setTitle(`Estoy ${Math.round(guess.proba * 100)}% Seguro que es:`)
-                            .setDescription(`${guess.name}${guess.description ? ` - ${guess.description}` : ""}\nRanking #${guess.ranking}
+                            // .setTitle(`Estoy ${Math.round(aki.guess.proba * 100)}% Seguro que es:`)
+                            .setTitle(`Estoy Seguro que es:`)
+                            .setDescription(`${aki.guess.name_proposition}${aki.guess.description_proposition ? ` - ${aki.guess.description_proposition}` : ""}
                     <@${message.author.id}> Escribe sí/no para confirmar o no`)
-                            .setImage(guess.absolute_picture_path || null)
+                            .setImage(aki.guess.photo || null)
                         await message.channel.send(embed);
                         const verification = await verify(message.channel, message.author);
                         if (verification === 0) {
@@ -128,15 +133,18 @@ module.exports = {
                             win = false;
                             break;
                         } else {
-                            const exmessage = timeGuesses >= 3 || forceGuess ? "Me rindo <:angry_m_m:833192077994623007>" : `<@${message.author.id}> voy a continuar adivinando`;
+                            const exmessage = "Me rindo <:angry_m_m:833192077994623007>";
+                            // const exmessage = timeGuesses >= 3 || forceGuess ? "Me rindo <:angry_m_m:833192077994623007>" : `<@${message.author.id}> voy a continuar adivinando`;
                             const embed = new Discord.MessageEmbed()
                                 .setDescription([`Si es así... ${exmessage}`])
                                 .setColor('#0ebcfb')
                             await message.channel.send(embed);
-                            if (timeGuesses >= 3 || forceGuess) {
-                                win = true;
-                                break;
-                            }
+                            win = true;
+                            break;
+                            // if (timeGuesses >= 3 || forceGuess) {
+                            //     win = true;
+                            //     break;
+                            // }
                         }
                     }
                 }

@@ -31,7 +31,7 @@ module.exports = {
                         + 'Saluda al Bot :)\n\n'
                         + '`-googleimage [search]` - NO OPERATIVO\n'
                         + 'Busca Imagénes, te mostaré el primer resultado de tu búsqueda\n\n'
-                        + '`-akinator [normal/animales]`\n'
+                        + '`-akinator`\n'
                         + 'Juega a Akinator!! gracias a la API `aki-api`\n\n'
                         + '`-say [message]`\n'
                         + 'Haz que yo repita el contenido de tu mensaje\n\n'
